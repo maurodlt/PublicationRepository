@@ -20,8 +20,8 @@ class InstitutionCreate(BaseModel):
 
 
 class AuthorCreate(BaseModel):
-    last_name: str
     name: str
+    last_name: str
     institution: List[int]  # N:M Relationship
     publication_1: List[int]  # N:M Relationship
 
@@ -34,28 +34,28 @@ class PublicationCreate(BaseModel):
 
 
 class ConferenceCreate(PublicationCreate):
-    month: str
-    organization: str
-    address: str
-    publisher: str
-    booktitle: str
-    number: str
-    pages: str
-    series: str
     note: str
+    booktitle: str
+    address: str
+    series: str
+    month: str
+    pages: str
+    publisher: str
+    organization: str
     editor: str
+    number: str
 
 
 class ProceedingsCreate(PublicationCreate):
+    number: str
     editor: str
-    volume: str
+    address: str
+    month: str
+    pages: str
     series: str
     organization: str
-    month: str
     publisher: str
-    address: str
-    number: str
-    pages: str
+    volume: str
     booktitle: str
 
 
@@ -65,24 +65,24 @@ class BookCreate(PublicationCreate):
 
 
 class ThesisCreate(PublicationCreate):
+    type: str
+    address: str
     month: str
     note: str
-    address: str
-    type: str
 
 
 class OthersCreate(PublicationCreate):
-    link: str
     peer_reviewed: bool
+    link: str
     server: str
 
 
 class JournalCreate(PublicationCreate):
     month: str
+    journal: str
     volume: str
     note: str
     pages: str
-    journal: str
     number: str
 
 

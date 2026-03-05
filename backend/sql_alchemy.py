@@ -18,20 +18,20 @@ class Base(DeclarativeBase):
 publication_institution = Table(
     "publication_institution",
     Base.metadata,
-    Column("publication", ForeignKey("publication.id"), primary_key=True),
     Column("institution_1", ForeignKey("institution.id"), primary_key=True),
+    Column("publication", ForeignKey("publication.id"), primary_key=True),
 )
 author_institution = Table(
     "author_institution",
     Base.metadata,
-    Column("institution", ForeignKey("institution.id"), primary_key=True),
     Column("author", ForeignKey("author.id"), primary_key=True),
+    Column("institution", ForeignKey("institution.id"), primary_key=True),
 )
 author_publication = Table(
     "author_publication",
     Base.metadata,
-    Column("publication_1", ForeignKey("publication.id"), primary_key=True),
     Column("author_1", ForeignKey("author.id"), primary_key=True),
+    Column("publication_1", ForeignKey("publication.id"), primary_key=True),
 )
 
 # Tables definition
@@ -126,28 +126,28 @@ class Others(Publication):
 class Journal(Publication):
     __tablename__ = "journal"
     id: Mapped[int] = mapped_column(ForeignKey("publication.id"), primary_key=True)
-    journal: Mapped[str] = mapped_column(String(100))
-    number: Mapped[str] = mapped_column(String(100))
     pages: Mapped[str] = mapped_column(String(100))
     month: Mapped[str] = mapped_column(String(100))
     note: Mapped[str] = mapped_column(String(100))
     volume: Mapped[str] = mapped_column(String(100))
+    journal: Mapped[str] = mapped_column(String(100))
+    number: Mapped[str] = mapped_column(String(100))
     __mapper_args__ = {
         "polymorphic_identity": "journal",
     }
 
 
 #--- Relationships of the institution table
-Institution.publication: Mapped[List["Publication"]] = relationship("Publication", secondary=publication_institution, back_populates="institution_1")
 Institution.author: Mapped[List["Author"]] = relationship("Author", secondary=author_institution, back_populates="institution")
+Institution.publication: Mapped[List["Publication"]] = relationship("Publication", secondary=publication_institution, back_populates="institution_1")
 
 #--- Relationships of the author table
 Author.institution: Mapped[List["Institution"]] = relationship("Institution", secondary=author_institution, back_populates="author")
 Author.publication_1: Mapped[List["Publication"]] = relationship("Publication", secondary=author_publication, back_populates="author_1")
 
 #--- Relationships of the publication table
-Publication.institution_1: Mapped[List["Institution"]] = relationship("Institution", secondary=publication_institution, back_populates="publication")
 Publication.author_1: Mapped[List["Author"]] = relationship("Author", secondary=author_publication, back_populates="publication_1")
+Publication.institution_1: Mapped[List["Institution"]] = relationship("Institution", secondary=publication_institution, back_populates="publication")
 
 # Database connection
 DATABASE_URL = "sqlite:///Class_Diagram.db"  # SQLite connection
