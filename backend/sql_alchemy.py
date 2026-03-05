@@ -21,17 +21,17 @@ author_publication = Table(
     Column("publication_1", ForeignKey("publication.id"), primary_key=True),
     Column("author_1", ForeignKey("author.id"), primary_key=True),
 )
-author_institution = Table(
-    "author_institution",
-    Base.metadata,
-    Column("institution", ForeignKey("institution.id"), primary_key=True),
-    Column("author", ForeignKey("author.id"), primary_key=True),
-)
 publication_institution = Table(
     "publication_institution",
     Base.metadata,
     Column("publication", ForeignKey("publication.id"), primary_key=True),
     Column("institution_1", ForeignKey("institution.id"), primary_key=True),
+)
+author_institution = Table(
+    "author_institution",
+    Base.metadata,
+    Column("author", ForeignKey("author.id"), primary_key=True),
+    Column("institution", ForeignKey("institution.id"), primary_key=True),
 )
 
 # Tables definition
@@ -62,16 +62,16 @@ class Publication(Base):
 class Conference(Publication):
     __tablename__ = "conference"
     id: Mapped[int] = mapped_column(ForeignKey("publication.id"), primary_key=True)
-    publisher: Mapped[str] = mapped_column(String(100))
-    series: Mapped[str] = mapped_column(String(100))
-    note: Mapped[str] = mapped_column(String(100))
-    pages: Mapped[str] = mapped_column(String(100))
     address: Mapped[str] = mapped_column(String(100))
     editor: Mapped[str] = mapped_column(String(100))
     month: Mapped[str] = mapped_column(String(100))
     organization: Mapped[str] = mapped_column(String(100))
     booktitle: Mapped[str] = mapped_column(String(100))
     number: Mapped[str] = mapped_column(String(100))
+    publisher: Mapped[str] = mapped_column(String(100))
+    series: Mapped[str] = mapped_column(String(100))
+    note: Mapped[str] = mapped_column(String(100))
+    pages: Mapped[str] = mapped_column(String(100))
     __mapper_args__ = {
         "polymorphic_identity": "conference",
     }
@@ -79,6 +79,8 @@ class Conference(Publication):
 class Proceedings(Publication):
     __tablename__ = "proceedings"
     id: Mapped[int] = mapped_column(ForeignKey("publication.id"), primary_key=True)
+    address: Mapped[str] = mapped_column(String(100))
+    editor: Mapped[str] = mapped_column(String(100))
     month: Mapped[str] = mapped_column(String(100))
     volume: Mapped[str] = mapped_column(String(100))
     organization: Mapped[str] = mapped_column(String(100))
@@ -87,8 +89,6 @@ class Proceedings(Publication):
     series: Mapped[str] = mapped_column(String(100))
     pages: Mapped[str] = mapped_column(String(100))
     booktitle: Mapped[str] = mapped_column(String(100))
-    address: Mapped[str] = mapped_column(String(100))
-    editor: Mapped[str] = mapped_column(String(100))
     __mapper_args__ = {
         "polymorphic_identity": "proceedings",
     }
@@ -105,10 +105,10 @@ class Book(Publication):
 class Thesis(Publication):
     __tablename__ = "thesis"
     id: Mapped[int] = mapped_column(ForeignKey("publication.id"), primary_key=True)
-    month: Mapped[str] = mapped_column(String(100))
-    address: Mapped[str] = mapped_column(String(100))
     type: Mapped[str] = mapped_column(String(100))
     note: Mapped[str] = mapped_column(String(100))
+    month: Mapped[str] = mapped_column(String(100))
+    address: Mapped[str] = mapped_column(String(100))
     __mapper_args__ = {
         "polymorphic_identity": "thesis",
     }
@@ -138,12 +138,12 @@ class Journal(Publication):
 
 
 #--- Relationships of the institution table
-Institution.publication: Mapped[List["Publication"]] = relationship("Publication", secondary=publication_institution, back_populates="institution_1")
 Institution.author: Mapped[List["Author"]] = relationship("Author", secondary=author_institution, back_populates="institution")
+Institution.publication: Mapped[List["Publication"]] = relationship("Publication", secondary=publication_institution, back_populates="institution_1")
 
 #--- Relationships of the author table
-Author.institution: Mapped[List["Institution"]] = relationship("Institution", secondary=author_institution, back_populates="author")
 Author.publication_1: Mapped[List["Publication"]] = relationship("Publication", secondary=author_publication, back_populates="author_1")
+Author.institution: Mapped[List["Institution"]] = relationship("Institution", secondary=author_institution, back_populates="author")
 
 #--- Relationships of the publication table
 Publication.institution_1: Mapped[List["Institution"]] = relationship("Institution", secondary=publication_institution, back_populates="publication")

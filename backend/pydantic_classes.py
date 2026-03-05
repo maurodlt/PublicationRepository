@@ -13,10 +13,10 @@ from pydantic import BaseModel, field_validator
 ############################################
 class InstitutionCreate(BaseModel):
     country: str
-    name: str
     city: str
-    author: List[int]  # N:M Relationship
+    name: str
     publication: List[int]  # N:M Relationship
+    author: List[int]  # N:M Relationship
 
 
 class AuthorCreate(BaseModel):
@@ -27,62 +27,62 @@ class AuthorCreate(BaseModel):
 
 
 class PublicationCreate(BaseModel):
-    year: int
     title: str
+    year: int
     author_1: List[int]  # N:M Relationship
     institution_1: List[int]  # N:M Relationship
 
 
 class ConferenceCreate(PublicationCreate):
-    booktitle: str
-    number: str
-    publisher: str
     address: str
     note: str
     organization: str
-    series: str
     editor: str
+    booktitle: str
     pages: str
     month: str
+    number: str
+    publisher: str
+    series: str
 
 
 class ProceedingsCreate(PublicationCreate):
-    publisher: str
-    series: str
-    number: str
-    organization: str
-    month: str
     editor: str
-    booktitle: str
-    address: str
+    number: str
     pages: str
     volume: str
+    month: str
+    series: str
+    publisher: str
+    organization: str
+    booktitle: str
+    address: str
 
 
 class BookCreate(PublicationCreate):
-    address: str
     publisher: str
+    address: str
 
 
 class ThesisCreate(PublicationCreate):
-    note: str
     address: str
     type: str
+    note: str
     month: str
 
 
 class OthersCreate(PublicationCreate):
-    peer_reviewed: bool
     server: str
+    peer_reviewed: bool
     link: str
 
 
 class JournalCreate(PublicationCreate):
-    volume: str
-    number: str
-    journal: str
-    month: str
     pages: str
+    journal: str
+    volume: str
     note: str
+    number: str
+    month: str
 
 

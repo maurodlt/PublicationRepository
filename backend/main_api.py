@@ -300,18 +300,18 @@ def get_all_institution(detailed: bool = False, database: Session = Depends(get_
             # Add many-to-one relationships (foreign keys for lookup columns)
 
             # Add many-to-many and one-to-many relationship objects (full details)
-            author_list = database.query(Author).join(author_institution, Author.id == author_institution.c.author).filter(author_institution.c.institution == institution_item.id).all()
-            item_dict['author'] = []
-            for author_obj in author_list:
-                author_dict = author_obj.__dict__.copy()
-                author_dict.pop('_sa_instance_state', None)
-                item_dict['author'].append(author_dict)
             publication_list = database.query(Publication).join(publication_institution, Publication.id == publication_institution.c.publication).filter(publication_institution.c.institution_1 == institution_item.id).all()
             item_dict['publication'] = []
             for publication_obj in publication_list:
                 publication_dict = publication_obj.__dict__.copy()
                 publication_dict.pop('_sa_instance_state', None)
                 item_dict['publication'].append(publication_dict)
+            author_list = database.query(Author).join(author_institution, Author.id == author_institution.c.author).filter(author_institution.c.institution == institution_item.id).all()
+            item_dict['author'] = []
+            for author_obj in author_list:
+                author_dict = author_obj.__dict__.copy()
+                author_dict.pop('_sa_instance_state', None)
+                item_dict['author'].append(author_dict)
 
             result.append(item_dict)
         return result
@@ -344,12 +344,12 @@ def get_paginated_institution(skip: int = 0, limit: int = 100, detailed: bool = 
 
     result = []
     for institution_item in institution_list:
-        author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == institution_item.id).all()
         publication_ids = database.query(publication_institution.c.publication).filter(publication_institution.c.institution_1 == institution_item.id).all()
+        author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == institution_item.id).all()
         item_data = {
             "institution": institution_item,
-            "author_ids": [x[0] for x in author_ids],
             "publication_ids": [x[0] for x in publication_ids],
+            "author_ids": [x[0] for x in author_ids],
         }
         result.append(item_data)
     return {
@@ -378,12 +378,12 @@ async def get_institution(institution_id: int, database: Session = Depends(get_d
     if db_institution is None:
         raise HTTPException(status_code=404, detail="Institution not found")
 
-    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == db_institution.id).all()
     publication_ids = database.query(publication_institution.c.publication).filter(publication_institution.c.institution_1 == db_institution.id).all()
+    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == db_institution.id).all()
     response_data = {
         "institution": db_institution,
-        "author_ids": [x[0] for x in author_ids],
         "publication_ids": [x[0] for x in publication_ids],
+        "author_ids": [x[0] for x in author_ids],
 }
     return response_data
 
@@ -392,35 +392,27 @@ async def get_institution(institution_id: int, database: Session = Depends(get_d
 @app.post("/institution/", response_model=None, tags=["Institution"])
 async def create_institution(institution_data: InstitutionCreate, database: Session = Depends(get_db)) -> Institution:
 
-    if institution_data.author:
-        for id in institution_data.author:
-            # Entity already validated before creation
-            db_author = database.query(Author).filter(Author.id == id).first()
-            if not db_author:
-                raise HTTPException(status_code=404, detail=f"Author with ID {id} not found")
     if institution_data.publication:
         for id in institution_data.publication:
             # Entity already validated before creation
             db_publication = database.query(Publication).filter(Publication.id == id).first()
             if not db_publication:
                 raise HTTPException(status_code=404, detail=f"Publication with ID {id} not found")
+    if institution_data.author:
+        for id in institution_data.author:
+            # Entity already validated before creation
+            db_author = database.query(Author).filter(Author.id == id).first()
+            if not db_author:
+                raise HTTPException(status_code=404, detail=f"Author with ID {id} not found")
 
     db_institution = Institution(
-        country=institution_data.country,        name=institution_data.name,        city=institution_data.city        )
+        country=institution_data.country,        city=institution_data.city,        name=institution_data.name        )
 
     database.add(db_institution)
     database.commit()
     database.refresh(db_institution)
 
 
-    if institution_data.author:
-        for id in institution_data.author:
-            # Entity already validated before creation
-            db_author = database.query(Author).filter(Author.id == id).first()
-            # Create the association
-            association = author_institution.insert().values(institution=db_institution.id, author=db_author.id)
-            database.execute(association)
-            database.commit()
     if institution_data.publication:
         for id in institution_data.publication:
             # Entity already validated before creation
@@ -429,14 +421,22 @@ async def create_institution(institution_data: InstitutionCreate, database: Sess
             association = publication_institution.insert().values(institution_1=db_institution.id, publication=db_publication.id)
             database.execute(association)
             database.commit()
+    if institution_data.author:
+        for id in institution_data.author:
+            # Entity already validated before creation
+            db_author = database.query(Author).filter(Author.id == id).first()
+            # Create the association
+            association = author_institution.insert().values(institution=db_institution.id, author=db_author.id)
+            database.execute(association)
+            database.commit()
 
 
-    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == db_institution.id).all()
     publication_ids = database.query(publication_institution.c.publication).filter(publication_institution.c.institution_1 == db_institution.id).all()
+    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == db_institution.id).all()
     response_data = {
         "institution": db_institution,
-        "author_ids": [x[0] for x in author_ids],
         "publication_ids": [x[0] for x in publication_ids],
+        "author_ids": [x[0] for x in author_ids],
     }
     return response_data
 
@@ -452,7 +452,7 @@ async def bulk_create_institution(items: list[InstitutionCreate], database: Sess
             # Basic validation for each item
 
             db_institution = Institution(
-                country=item_data.country,                name=item_data.name,                city=item_data.city            )
+                country=item_data.country,                city=item_data.city,                name=item_data.name            )
             database.add(db_institution)
             database.flush()  # Get ID without committing
             created_items.append(db_institution.id)
@@ -500,24 +500,8 @@ async def update_institution(institution_id: int, institution_data: InstitutionC
         raise HTTPException(status_code=404, detail="Institution not found")
 
     setattr(db_institution, 'country', institution_data.country)
-    setattr(db_institution, 'name', institution_data.name)
     setattr(db_institution, 'city', institution_data.city)
-    existing_author_ids = [assoc.author for assoc in database.execute(
-        author_institution.select().where(author_institution.c.institution == db_institution.id))]
-
-    authors_to_remove = set(existing_author_ids) - set(institution_data.author)
-    for author_id in authors_to_remove:
-        association = author_institution.delete().where(
-            (author_institution.c.institution == db_institution.id) & (author_institution.c.author == author_id))
-        database.execute(association)
-
-    new_author_ids = set(institution_data.author) - set(existing_author_ids)
-    for author_id in new_author_ids:
-        db_author = database.query(Author).filter(Author.id == author_id).first()
-        if db_author is None:
-            raise HTTPException(status_code=404, detail=f"Author with ID {author_id} not found")
-        association = author_institution.insert().values(author=db_author.id, institution=db_institution.id)
-        database.execute(association)
+    setattr(db_institution, 'name', institution_data.name)
     existing_publication_ids = [assoc.publication for assoc in database.execute(
         publication_institution.select().where(publication_institution.c.institution_1 == db_institution.id))]
 
@@ -534,15 +518,31 @@ async def update_institution(institution_id: int, institution_data: InstitutionC
             raise HTTPException(status_code=404, detail=f"Publication with ID {publication_id} not found")
         association = publication_institution.insert().values(publication=db_publication.id, institution_1=db_institution.id)
         database.execute(association)
+    existing_author_ids = [assoc.author for assoc in database.execute(
+        author_institution.select().where(author_institution.c.institution == db_institution.id))]
+
+    authors_to_remove = set(existing_author_ids) - set(institution_data.author)
+    for author_id in authors_to_remove:
+        association = author_institution.delete().where(
+            (author_institution.c.institution == db_institution.id) & (author_institution.c.author == author_id))
+        database.execute(association)
+
+    new_author_ids = set(institution_data.author) - set(existing_author_ids)
+    for author_id in new_author_ids:
+        db_author = database.query(Author).filter(Author.id == author_id).first()
+        if db_author is None:
+            raise HTTPException(status_code=404, detail=f"Author with ID {author_id} not found")
+        association = author_institution.insert().values(author=db_author.id, institution=db_institution.id)
+        database.execute(association)
     database.commit()
     database.refresh(db_institution)
 
-    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == db_institution.id).all()
     publication_ids = database.query(publication_institution.c.publication).filter(publication_institution.c.institution_1 == db_institution.id).all()
+    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == db_institution.id).all()
     response_data = {
         "institution": db_institution,
-        "author_ids": [x[0] for x in author_ids],
         "publication_ids": [x[0] for x in publication_ids],
+        "author_ids": [x[0] for x in author_ids],
     }
     return response_data
 
@@ -555,77 +555,6 @@ async def delete_institution(institution_id: int, database: Session = Depends(ge
     database.delete(db_institution)
     database.commit()
     return db_institution
-
-@app.post("/institution/{institution_id}/author/{author_id}/", response_model=None, tags=["Institution Relationships"])
-async def add_author_to_institution(institution_id: int, author_id: int, database: Session = Depends(get_db)):
-    """Add a Author to this Institution's author relationship"""
-    db_institution = database.query(Institution).filter(Institution.id == institution_id).first()
-    if db_institution is None:
-        raise HTTPException(status_code=404, detail="Institution not found")
-
-    db_author = database.query(Author).filter(Author.id == author_id).first()
-    if db_author is None:
-        raise HTTPException(status_code=404, detail="Author not found")
-
-    # Check if relationship already exists
-    existing = database.query(author_institution).filter(
-        (author_institution.c.institution == institution_id) &
-        (author_institution.c.author == author_id)
-    ).first()
-
-    if existing:
-        raise HTTPException(status_code=400, detail="Relationship already exists")
-
-    # Create the association
-    association = author_institution.insert().values(institution=institution_id, author=author_id)
-    database.execute(association)
-    database.commit()
-
-    return {"message": "Author added to author successfully"}
-
-
-@app.delete("/institution/{institution_id}/author/{author_id}/", response_model=None, tags=["Institution Relationships"])
-async def remove_author_from_institution(institution_id: int, author_id: int, database: Session = Depends(get_db)):
-    """Remove a Author from this Institution's author relationship"""
-    db_institution = database.query(Institution).filter(Institution.id == institution_id).first()
-    if db_institution is None:
-        raise HTTPException(status_code=404, detail="Institution not found")
-
-    # Check if relationship exists
-    existing = database.query(author_institution).filter(
-        (author_institution.c.institution == institution_id) &
-        (author_institution.c.author == author_id)
-    ).first()
-
-    if not existing:
-        raise HTTPException(status_code=404, detail="Relationship not found")
-
-    # Delete the association
-    association = author_institution.delete().where(
-        (author_institution.c.institution == institution_id) &
-        (author_institution.c.author == author_id)
-    )
-    database.execute(association)
-    database.commit()
-
-    return {"message": "Author removed from author successfully"}
-
-
-@app.get("/institution/{institution_id}/author/", response_model=None, tags=["Institution Relationships"])
-async def get_author_of_institution(institution_id: int, database: Session = Depends(get_db)):
-    """Get all Author entities related to this Institution through author"""
-    db_institution = database.query(Institution).filter(Institution.id == institution_id).first()
-    if db_institution is None:
-        raise HTTPException(status_code=404, detail="Institution not found")
-
-    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == institution_id).all()
-    author_list = database.query(Author).filter(Author.id.in_([id[0] for id in author_ids])).all()
-
-    return {
-        "institution_id": institution_id,
-        "author_count": len(author_list),
-        "author": author_list
-    }
 
 @app.post("/institution/{institution_id}/publication/{publication_id}/", response_model=None, tags=["Institution Relationships"])
 async def add_publication_to_institution(institution_id: int, publication_id: int, database: Session = Depends(get_db)):
@@ -696,6 +625,77 @@ async def get_publication_of_institution(institution_id: int, database: Session 
         "institution_id": institution_id,
         "publication_count": len(publication_list),
         "publication": publication_list
+    }
+
+@app.post("/institution/{institution_id}/author/{author_id}/", response_model=None, tags=["Institution Relationships"])
+async def add_author_to_institution(institution_id: int, author_id: int, database: Session = Depends(get_db)):
+    """Add a Author to this Institution's author relationship"""
+    db_institution = database.query(Institution).filter(Institution.id == institution_id).first()
+    if db_institution is None:
+        raise HTTPException(status_code=404, detail="Institution not found")
+
+    db_author = database.query(Author).filter(Author.id == author_id).first()
+    if db_author is None:
+        raise HTTPException(status_code=404, detail="Author not found")
+
+    # Check if relationship already exists
+    existing = database.query(author_institution).filter(
+        (author_institution.c.institution == institution_id) &
+        (author_institution.c.author == author_id)
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Relationship already exists")
+
+    # Create the association
+    association = author_institution.insert().values(institution=institution_id, author=author_id)
+    database.execute(association)
+    database.commit()
+
+    return {"message": "Author added to author successfully"}
+
+
+@app.delete("/institution/{institution_id}/author/{author_id}/", response_model=None, tags=["Institution Relationships"])
+async def remove_author_from_institution(institution_id: int, author_id: int, database: Session = Depends(get_db)):
+    """Remove a Author from this Institution's author relationship"""
+    db_institution = database.query(Institution).filter(Institution.id == institution_id).first()
+    if db_institution is None:
+        raise HTTPException(status_code=404, detail="Institution not found")
+
+    # Check if relationship exists
+    existing = database.query(author_institution).filter(
+        (author_institution.c.institution == institution_id) &
+        (author_institution.c.author == author_id)
+    ).first()
+
+    if not existing:
+        raise HTTPException(status_code=404, detail="Relationship not found")
+
+    # Delete the association
+    association = author_institution.delete().where(
+        (author_institution.c.institution == institution_id) &
+        (author_institution.c.author == author_id)
+    )
+    database.execute(association)
+    database.commit()
+
+    return {"message": "Author removed from author successfully"}
+
+
+@app.get("/institution/{institution_id}/author/", response_model=None, tags=["Institution Relationships"])
+async def get_author_of_institution(institution_id: int, database: Session = Depends(get_db)):
+    """Get all Author entities related to this Institution through author"""
+    db_institution = database.query(Institution).filter(Institution.id == institution_id).first()
+    if db_institution is None:
+        raise HTTPException(status_code=404, detail="Institution not found")
+
+    author_ids = database.query(author_institution.c.author).filter(author_institution.c.institution == institution_id).all()
+    author_list = database.query(Author).filter(Author.id.in_([id[0] for id in author_ids])).all()
+
+    return {
+        "institution_id": institution_id,
+        "author_count": len(author_list),
+        "author": author_list
     }
 
 
@@ -1263,7 +1263,7 @@ async def create_publication(publication_data: PublicationCreate, database: Sess
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_publication = Publication(
-        year=publication_data.year,        title=publication_data.title        )
+        title=publication_data.title,        year=publication_data.year        )
 
     database.add(db_publication)
     database.commit()
@@ -1309,7 +1309,7 @@ async def bulk_create_publication(items: list[PublicationCreate], database: Sess
             # Basic validation for each item
 
             db_publication = Publication(
-                year=item_data.year,                title=item_data.title            )
+                title=item_data.title,                year=item_data.year            )
             database.add(db_publication)
             database.flush()  # Get ID without committing
             created_items.append(db_publication.id)
@@ -1356,8 +1356,8 @@ async def update_publication(publication_id: int, publication_data: PublicationC
     if db_publication is None:
         raise HTTPException(status_code=404, detail="Publication not found")
 
-    setattr(db_publication, 'year', publication_data.year)
     setattr(db_publication, 'title', publication_data.title)
+    setattr(db_publication, 'year', publication_data.year)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_publication.id))]
 
@@ -1693,7 +1693,7 @@ async def create_conference(conference_data: ConferenceCreate, database: Session
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_conference = Conference(
-        year=conference_data.year,        title=conference_data.title,        booktitle=conference_data.booktitle,        number=conference_data.number,        publisher=conference_data.publisher,        address=conference_data.address,        note=conference_data.note,        organization=conference_data.organization,        series=conference_data.series,        editor=conference_data.editor,        pages=conference_data.pages,        month=conference_data.month        )
+        title=conference_data.title,        year=conference_data.year,        address=conference_data.address,        note=conference_data.note,        organization=conference_data.organization,        editor=conference_data.editor,        booktitle=conference_data.booktitle,        pages=conference_data.pages,        month=conference_data.month,        number=conference_data.number,        publisher=conference_data.publisher,        series=conference_data.series        )
 
     database.add(db_conference)
     database.commit()
@@ -1739,7 +1739,7 @@ async def bulk_create_conference(items: list[ConferenceCreate], database: Sessio
             # Basic validation for each item
 
             db_conference = Conference(
-                year=item_data.year,                title=item_data.title,                booktitle=item_data.booktitle,                number=item_data.number,                publisher=item_data.publisher,                address=item_data.address,                note=item_data.note,                organization=item_data.organization,                series=item_data.series,                editor=item_data.editor,                pages=item_data.pages,                month=item_data.month            )
+                title=item_data.title,                year=item_data.year,                address=item_data.address,                note=item_data.note,                organization=item_data.organization,                editor=item_data.editor,                booktitle=item_data.booktitle,                pages=item_data.pages,                month=item_data.month,                number=item_data.number,                publisher=item_data.publisher,                series=item_data.series            )
             database.add(db_conference)
             database.flush()  # Get ID without committing
             created_items.append(db_conference.id)
@@ -1786,16 +1786,16 @@ async def update_conference(conference_id: int, conference_data: ConferenceCreat
     if db_conference is None:
         raise HTTPException(status_code=404, detail="Conference not found")
 
-    setattr(db_conference, 'booktitle', conference_data.booktitle)
-    setattr(db_conference, 'number', conference_data.number)
-    setattr(db_conference, 'publisher', conference_data.publisher)
     setattr(db_conference, 'address', conference_data.address)
     setattr(db_conference, 'note', conference_data.note)
     setattr(db_conference, 'organization', conference_data.organization)
-    setattr(db_conference, 'series', conference_data.series)
     setattr(db_conference, 'editor', conference_data.editor)
+    setattr(db_conference, 'booktitle', conference_data.booktitle)
     setattr(db_conference, 'pages', conference_data.pages)
     setattr(db_conference, 'month', conference_data.month)
+    setattr(db_conference, 'number', conference_data.number)
+    setattr(db_conference, 'publisher', conference_data.publisher)
+    setattr(db_conference, 'series', conference_data.series)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_conference.id))]
 
@@ -2131,7 +2131,7 @@ async def create_proceedings(proceedings_data: ProceedingsCreate, database: Sess
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_proceedings = Proceedings(
-        year=proceedings_data.year,        title=proceedings_data.title,        publisher=proceedings_data.publisher,        series=proceedings_data.series,        number=proceedings_data.number,        organization=proceedings_data.organization,        month=proceedings_data.month,        editor=proceedings_data.editor,        booktitle=proceedings_data.booktitle,        address=proceedings_data.address,        pages=proceedings_data.pages,        volume=proceedings_data.volume        )
+        title=proceedings_data.title,        year=proceedings_data.year,        editor=proceedings_data.editor,        number=proceedings_data.number,        pages=proceedings_data.pages,        volume=proceedings_data.volume,        month=proceedings_data.month,        series=proceedings_data.series,        publisher=proceedings_data.publisher,        organization=proceedings_data.organization,        booktitle=proceedings_data.booktitle,        address=proceedings_data.address        )
 
     database.add(db_proceedings)
     database.commit()
@@ -2177,7 +2177,7 @@ async def bulk_create_proceedings(items: list[ProceedingsCreate], database: Sess
             # Basic validation for each item
 
             db_proceedings = Proceedings(
-                year=item_data.year,                title=item_data.title,                publisher=item_data.publisher,                series=item_data.series,                number=item_data.number,                organization=item_data.organization,                month=item_data.month,                editor=item_data.editor,                booktitle=item_data.booktitle,                address=item_data.address,                pages=item_data.pages,                volume=item_data.volume            )
+                title=item_data.title,                year=item_data.year,                editor=item_data.editor,                number=item_data.number,                pages=item_data.pages,                volume=item_data.volume,                month=item_data.month,                series=item_data.series,                publisher=item_data.publisher,                organization=item_data.organization,                booktitle=item_data.booktitle,                address=item_data.address            )
             database.add(db_proceedings)
             database.flush()  # Get ID without committing
             created_items.append(db_proceedings.id)
@@ -2224,16 +2224,16 @@ async def update_proceedings(proceedings_id: int, proceedings_data: ProceedingsC
     if db_proceedings is None:
         raise HTTPException(status_code=404, detail="Proceedings not found")
 
-    setattr(db_proceedings, 'publisher', proceedings_data.publisher)
-    setattr(db_proceedings, 'series', proceedings_data.series)
-    setattr(db_proceedings, 'number', proceedings_data.number)
-    setattr(db_proceedings, 'organization', proceedings_data.organization)
-    setattr(db_proceedings, 'month', proceedings_data.month)
     setattr(db_proceedings, 'editor', proceedings_data.editor)
-    setattr(db_proceedings, 'booktitle', proceedings_data.booktitle)
-    setattr(db_proceedings, 'address', proceedings_data.address)
+    setattr(db_proceedings, 'number', proceedings_data.number)
     setattr(db_proceedings, 'pages', proceedings_data.pages)
     setattr(db_proceedings, 'volume', proceedings_data.volume)
+    setattr(db_proceedings, 'month', proceedings_data.month)
+    setattr(db_proceedings, 'series', proceedings_data.series)
+    setattr(db_proceedings, 'publisher', proceedings_data.publisher)
+    setattr(db_proceedings, 'organization', proceedings_data.organization)
+    setattr(db_proceedings, 'booktitle', proceedings_data.booktitle)
+    setattr(db_proceedings, 'address', proceedings_data.address)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_proceedings.id))]
 
@@ -2569,7 +2569,7 @@ async def create_book(book_data: BookCreate, database: Session = Depends(get_db)
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_book = Book(
-        year=book_data.year,        title=book_data.title,        address=book_data.address,        publisher=book_data.publisher        )
+        title=book_data.title,        year=book_data.year,        publisher=book_data.publisher,        address=book_data.address        )
 
     database.add(db_book)
     database.commit()
@@ -2615,7 +2615,7 @@ async def bulk_create_book(items: list[BookCreate], database: Session = Depends(
             # Basic validation for each item
 
             db_book = Book(
-                year=item_data.year,                title=item_data.title,                address=item_data.address,                publisher=item_data.publisher            )
+                title=item_data.title,                year=item_data.year,                publisher=item_data.publisher,                address=item_data.address            )
             database.add(db_book)
             database.flush()  # Get ID without committing
             created_items.append(db_book.id)
@@ -2662,8 +2662,8 @@ async def update_book(book_id: int, book_data: BookCreate, database: Session = D
     if db_book is None:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    setattr(db_book, 'address', book_data.address)
     setattr(db_book, 'publisher', book_data.publisher)
+    setattr(db_book, 'address', book_data.address)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_book.id))]
 
@@ -2999,7 +2999,7 @@ async def create_thesis(thesis_data: ThesisCreate, database: Session = Depends(g
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_thesis = Thesis(
-        year=thesis_data.year,        title=thesis_data.title,        note=thesis_data.note,        address=thesis_data.address,        type=thesis_data.type,        month=thesis_data.month        )
+        title=thesis_data.title,        year=thesis_data.year,        address=thesis_data.address,        type=thesis_data.type,        note=thesis_data.note,        month=thesis_data.month        )
 
     database.add(db_thesis)
     database.commit()
@@ -3045,7 +3045,7 @@ async def bulk_create_thesis(items: list[ThesisCreate], database: Session = Depe
             # Basic validation for each item
 
             db_thesis = Thesis(
-                year=item_data.year,                title=item_data.title,                note=item_data.note,                address=item_data.address,                type=item_data.type,                month=item_data.month            )
+                title=item_data.title,                year=item_data.year,                address=item_data.address,                type=item_data.type,                note=item_data.note,                month=item_data.month            )
             database.add(db_thesis)
             database.flush()  # Get ID without committing
             created_items.append(db_thesis.id)
@@ -3092,9 +3092,9 @@ async def update_thesis(thesis_id: int, thesis_data: ThesisCreate, database: Ses
     if db_thesis is None:
         raise HTTPException(status_code=404, detail="Thesis not found")
 
-    setattr(db_thesis, 'note', thesis_data.note)
     setattr(db_thesis, 'address', thesis_data.address)
     setattr(db_thesis, 'type', thesis_data.type)
+    setattr(db_thesis, 'note', thesis_data.note)
     setattr(db_thesis, 'month', thesis_data.month)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_thesis.id))]
@@ -3431,7 +3431,7 @@ async def create_others(others_data: OthersCreate, database: Session = Depends(g
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_others = Others(
-        year=others_data.year,        title=others_data.title,        peer_reviewed=others_data.peer_reviewed,        server=others_data.server,        link=others_data.link        )
+        title=others_data.title,        year=others_data.year,        server=others_data.server,        peer_reviewed=others_data.peer_reviewed,        link=others_data.link        )
 
     database.add(db_others)
     database.commit()
@@ -3477,7 +3477,7 @@ async def bulk_create_others(items: list[OthersCreate], database: Session = Depe
             # Basic validation for each item
 
             db_others = Others(
-                year=item_data.year,                title=item_data.title,                peer_reviewed=item_data.peer_reviewed,                server=item_data.server,                link=item_data.link            )
+                title=item_data.title,                year=item_data.year,                server=item_data.server,                peer_reviewed=item_data.peer_reviewed,                link=item_data.link            )
             database.add(db_others)
             database.flush()  # Get ID without committing
             created_items.append(db_others.id)
@@ -3524,8 +3524,8 @@ async def update_others(others_id: int, others_data: OthersCreate, database: Ses
     if db_others is None:
         raise HTTPException(status_code=404, detail="Others not found")
 
-    setattr(db_others, 'peer_reviewed', others_data.peer_reviewed)
     setattr(db_others, 'server', others_data.server)
+    setattr(db_others, 'peer_reviewed', others_data.peer_reviewed)
     setattr(db_others, 'link', others_data.link)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_others.id))]
@@ -3862,7 +3862,7 @@ async def create_journal(journal_data: JournalCreate, database: Session = Depend
                 raise HTTPException(status_code=404, detail=f"Institution with ID {id} not found")
 
     db_journal = Journal(
-        year=journal_data.year,        title=journal_data.title,        volume=journal_data.volume,        number=journal_data.number,        journal=journal_data.journal,        month=journal_data.month,        pages=journal_data.pages,        note=journal_data.note        )
+        title=journal_data.title,        year=journal_data.year,        pages=journal_data.pages,        journal=journal_data.journal,        volume=journal_data.volume,        note=journal_data.note,        number=journal_data.number,        month=journal_data.month        )
 
     database.add(db_journal)
     database.commit()
@@ -3908,7 +3908,7 @@ async def bulk_create_journal(items: list[JournalCreate], database: Session = De
             # Basic validation for each item
 
             db_journal = Journal(
-                year=item_data.year,                title=item_data.title,                volume=item_data.volume,                number=item_data.number,                journal=item_data.journal,                month=item_data.month,                pages=item_data.pages,                note=item_data.note            )
+                title=item_data.title,                year=item_data.year,                pages=item_data.pages,                journal=item_data.journal,                volume=item_data.volume,                note=item_data.note,                number=item_data.number,                month=item_data.month            )
             database.add(db_journal)
             database.flush()  # Get ID without committing
             created_items.append(db_journal.id)
@@ -3955,12 +3955,12 @@ async def update_journal(journal_id: int, journal_data: JournalCreate, database:
     if db_journal is None:
         raise HTTPException(status_code=404, detail="Journal not found")
 
-    setattr(db_journal, 'volume', journal_data.volume)
-    setattr(db_journal, 'number', journal_data.number)
-    setattr(db_journal, 'journal', journal_data.journal)
-    setattr(db_journal, 'month', journal_data.month)
     setattr(db_journal, 'pages', journal_data.pages)
+    setattr(db_journal, 'journal', journal_data.journal)
+    setattr(db_journal, 'volume', journal_data.volume)
     setattr(db_journal, 'note', journal_data.note)
+    setattr(db_journal, 'number', journal_data.number)
+    setattr(db_journal, 'month', journal_data.month)
     existing_author_ids = [assoc.author_1 for assoc in database.execute(
         author_publication.select().where(author_publication.c.publication_1 == db_journal.id))]
 
