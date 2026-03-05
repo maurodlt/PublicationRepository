@@ -15,17 +15,17 @@ class Base(DeclarativeBase):
 
 
 # Tables definition for many-to-many relationships
-author_institution = Table(
-    "author_institution",
-    Base.metadata,
-    Column("institution", ForeignKey("institution.id"), primary_key=True),
-    Column("author", ForeignKey("author.id"), primary_key=True),
-)
 author_publication = Table(
     "author_publication",
     Base.metadata,
     Column("publication_1", ForeignKey("publication.id"), primary_key=True),
     Column("author_1", ForeignKey("author.id"), primary_key=True),
+)
+author_institution = Table(
+    "author_institution",
+    Base.metadata,
+    Column("institution", ForeignKey("institution.id"), primary_key=True),
+    Column("author", ForeignKey("author.id"), primary_key=True),
 )
 publication_institution = Table(
     "publication_institution",
@@ -45,8 +45,8 @@ class Institution(Base):
 class Author(Base):
     __tablename__ = "author"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100))
 
 class Publication(Base):
     __tablename__ = "publication"
@@ -79,8 +79,6 @@ class Conference(Publication):
 class Proceedings(Publication):
     __tablename__ = "proceedings"
     id: Mapped[int] = mapped_column(ForeignKey("publication.id"), primary_key=True)
-    address: Mapped[str] = mapped_column(String(100))
-    editor: Mapped[str] = mapped_column(String(100))
     month: Mapped[str] = mapped_column(String(100))
     volume: Mapped[str] = mapped_column(String(100))
     organization: Mapped[str] = mapped_column(String(100))
@@ -89,6 +87,8 @@ class Proceedings(Publication):
     series: Mapped[str] = mapped_column(String(100))
     pages: Mapped[str] = mapped_column(String(100))
     booktitle: Mapped[str] = mapped_column(String(100))
+    address: Mapped[str] = mapped_column(String(100))
+    editor: Mapped[str] = mapped_column(String(100))
     __mapper_args__ = {
         "polymorphic_identity": "proceedings",
     }
@@ -146,8 +146,8 @@ Author.institution: Mapped[List["Institution"]] = relationship("Institution", se
 Author.publication_1: Mapped[List["Publication"]] = relationship("Publication", secondary=author_publication, back_populates="author_1")
 
 #--- Relationships of the publication table
-Publication.author_1: Mapped[List["Author"]] = relationship("Author", secondary=author_publication, back_populates="publication_1")
 Publication.institution_1: Mapped[List["Institution"]] = relationship("Institution", secondary=publication_institution, back_populates="publication")
+Publication.author_1: Mapped[List["Author"]] = relationship("Author", secondary=author_publication, back_populates="publication_1")
 
 # Database connection
 DATABASE_URL = "sqlite:///Class_Diagram.db"  # SQLite connection

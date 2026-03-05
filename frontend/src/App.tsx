@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { TableProvider } from "./contexts/TableContext";
 import Journal from "./pages/Journal";
+import Home from "./pages/Home";
 import Others from "./pages/Others";
 import Thesis from "./pages/Thesis";
 import Book from "./pages/Book";
@@ -18,6 +19,7 @@ function App() {
         <main className="app-main">
           <Routes>
             <Route path="/journal" element={<Journal />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/others" element={<Others />} />
             <Route path="/thesis" element={<Thesis />} />
             <Route path="/book" element={<Book />} />

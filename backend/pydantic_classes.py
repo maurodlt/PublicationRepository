@@ -12,9 +12,9 @@ from pydantic import BaseModel, field_validator
 # Classes are defined here
 ############################################
 class InstitutionCreate(BaseModel):
+    country: str
     name: str
     city: str
-    country: str
     author: List[int]  # N:M Relationship
     publication: List[int]  # N:M Relationship
 
@@ -22,41 +22,41 @@ class InstitutionCreate(BaseModel):
 class AuthorCreate(BaseModel):
     name: str
     last_name: str
-    institution: List[int]  # N:M Relationship
     publication_1: List[int]  # N:M Relationship
+    institution: List[int]  # N:M Relationship
 
 
 class PublicationCreate(BaseModel):
-    title: str
     year: int
+    title: str
     author_1: List[int]  # N:M Relationship
     institution_1: List[int]  # N:M Relationship
 
 
 class ConferenceCreate(PublicationCreate):
-    address: str
-    series: str
-    month: str
-    pages: str
-    publisher: str
     booktitle: str
-    editor: str
     number: str
+    publisher: str
+    address: str
     note: str
     organization: str
+    series: str
+    editor: str
+    pages: str
+    month: str
 
 
 class ProceedingsCreate(PublicationCreate):
-    month: str
-    volume: str
-    booktitle: str
     publisher: str
-    organization: str
-    editor: str
-    address: str
     series: str
-    pages: str
     number: str
+    organization: str
+    month: str
+    editor: str
+    booktitle: str
+    address: str
+    pages: str
+    volume: str
 
 
 class BookCreate(PublicationCreate):
@@ -65,10 +65,10 @@ class BookCreate(PublicationCreate):
 
 
 class ThesisCreate(PublicationCreate):
+    note: str
     address: str
     type: str
     month: str
-    note: str
 
 
 class OthersCreate(PublicationCreate):
@@ -78,11 +78,11 @@ class OthersCreate(PublicationCreate):
 
 
 class JournalCreate(PublicationCreate):
+    volume: str
     number: str
     journal: str
-    note: str
-    pages: str
     month: str
-    volume: str
+    pages: str
+    note: str
 
 
