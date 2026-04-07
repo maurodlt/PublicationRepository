@@ -1,0 +1,227 @@
+{
+  "id": "ffcd3da7-17f1-4815-9b5f-3203a5b07a58",
+  "type": "Project",
+  "schemaVersion": 3,
+  "name": "New_Project",
+  "description": "Modern workspace project for UML, GUI and quantum modeling.",
+  "owner": "BESSER User",
+  "createdAt": "2026-04-07T07:42:01.424Z",
+  "currentDiagramType": "StateMachineDiagram",
+  "currentDiagramIndices": {
+    "ClassDiagram": 0,
+    "ObjectDiagram": 0,
+    "StateMachineDiagram": 0,
+    "AgentDiagram": 0,
+    "GUINoCodeDiagram": 0,
+    "QuantumCircuitDiagram": 0
+  },
+  "diagrams": {
+    "ClassDiagram": [
+      {
+        "id": "f350dafd-1ce9-4f0d-b182-5dc43c36334c",
+        "title": "Class Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "ClassDiagram",
+          "size": {
+            "width": 1200,
+            "height": 460
+          },
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "elements": {
+            "904f0c92-088e-42bf-b986-1b4acf511316": {
+              "id": "904f0c92-088e-42bf-b986-1b4acf511316",
+              "name": "Class",
+              "type": "Class",
+              "owner": null,
+              "bounds": {
+                "x": -580,
+                "y": -210,
+                "width": 160,
+                "height": 100
+              },
+              "attributes": [
+                "eee4294a-2ff1-43f2-8931-d28367a291d5"
+              ],
+              "methods": [
+                "2f149d01-6807-4c33-8383-856ab986f662"
+              ]
+            },
+            "eee4294a-2ff1-43f2-8931-d28367a291d5": {
+              "id": "eee4294a-2ff1-43f2-8931-d28367a291d5",
+              "name": "attribute",
+              "type": "ClassAttribute",
+              "owner": "904f0c92-088e-42bf-b986-1b4acf511316",
+              "bounds": {
+                "x": -579.5,
+                "y": -169.5,
+                "width": 159,
+                "height": 30
+              },
+              "code": "",
+              "visibility": "public",
+              "attributeType": "str",
+              "implementationType": "none",
+              "stateMachineId": "",
+              "quantumCircuitId": "",
+              "isOptional": false,
+              "isDerived": false
+            },
+            "2f149d01-6807-4c33-8383-856ab986f662": {
+              "id": "2f149d01-6807-4c33-8383-856ab986f662",
+              "name": "+ method()",
+              "type": "ClassMethod",
+              "owner": "904f0c92-088e-42bf-b986-1b4acf511316",
+              "bounds": {
+                "x": -579.5,
+                "y": -139.5,
+                "width": 159,
+                "height": 30
+              },
+              "code": "",
+              "visibility": "public",
+              "attributeType": "str",
+              "implementationType": "none",
+              "stateMachineId": "",
+              "quantumCircuitId": "",
+              "isOptional": false,
+              "isDerived": false
+            }
+          },
+          "relationships": {},
+          "assessments": {}
+        },
+        "lastUpdate": "2026-04-07T07:44:37.196Z"
+      }
+    ],
+    "ObjectDiagram": [
+      {
+        "id": "7710c9d5-8b37-447f-be79-72f64410057d",
+        "title": "Object Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "ObjectDiagram",
+          "size": {
+            "width": 1400,
+            "height": 740
+          },
+          "elements": {},
+          "relationships": {},
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "assessments": {}
+        },
+        "lastUpdate": "2026-04-07T07:42:01.424Z"
+      }
+    ],
+    "StateMachineDiagram": [
+      {
+        "id": "c19f3f7c-e4c2-443b-a342-13eef710e2c1",
+        "title": "State Machine Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "StateMachineDiagram",
+          "size": {
+            "width": 0,
+            "height": 0
+          },
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "elements": {},
+          "relationships": {},
+          "assessments": {}
+        },
+        "lastUpdate": "2026-04-07T08:06:10.118Z"
+      }
+    ],
+    "AgentDiagram": [
+      {
+        "id": "44ded715-350a-4cf9-b198-861781cb3d13",
+        "title": "Agent Diagram",
+        "model": {
+          "version": "3.0.0",
+          "type": "AgentDiagram",
+          "size": {
+            "width": 1400,
+            "height": 740
+          },
+          "elements": {},
+          "relationships": {},
+          "interactive": {
+            "elements": {},
+            "relationships": {}
+          },
+          "assessments": {}
+        },
+        "lastUpdate": "2026-04-07T07:42:01.424Z"
+      }
+    ],
+    "GUINoCodeDiagram": [
+      {
+        "id": "d4dadc99-616b-4146-96fc-b67c97db13c5",
+        "title": "GUI Diagram",
+        "model": {
+          "pages": [
+            {
+              "name": "Home",
+              "frames": [
+                {
+                  "component": {
+                    "type": "wrapper",
+                    "stylable": [
+                      "background",
+                      "background-color",
+                      "background-image",
+                      "background-repeat",
+                      "background-attachment",
+                      "background-position",
+                      "background-size"
+                    ],
+                    "components": [],
+                    "head": {
+                      "type": "head"
+                    },
+                    "docEl": {
+                      "tagName": "html"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "styles": [],
+          "assets": [],
+          "symbols": [],
+          "version": "0.21.13"
+        },
+        "lastUpdate": "2026-04-07T07:42:01.424Z"
+      }
+    ],
+    "QuantumCircuitDiagram": [
+      {
+        "id": "7fa649cc-6de4-48ee-b2cc-e5d7b039a3e0",
+        "title": "Quantum Circuit",
+        "model": {
+          "cols": [],
+          "gates": [],
+          "gateMetadata": {},
+          "classicalBitCount": 0,
+          "version": "1.0.0"
+        },
+        "lastUpdate": "2026-04-07T07:43:59.181Z"
+      }
+    ]
+  },
+  "settings": {
+    "defaultDiagramType": "ClassDiagram",
+    "autoSave": true,
+    "collaborationEnabled": false
+  }
+}
