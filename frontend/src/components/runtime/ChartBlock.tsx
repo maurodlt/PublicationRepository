@@ -535,23 +535,43 @@ export const ChartBlock: React.FC<ChartBlockProps> = ({
       const filteredData = applyFilter(sourceData, parsedFilter);
       filteredData.forEach((item: any) => {
         const label = getNestedValue(item, s.labelField || "name") ?? item?.[s.labelField || "name"] ?? "";
-        const value = Number(getNestedValue(item, s.dataField || "value") ?? item?.[s.dataField || "value"] ?? 0);
         const key = String(label ?? "");
         if (!combined[key]) combined[key] = { name: key };
-        combined[key][s.name || "Series"] = value;
+        if (s.filter === "count") {
+          combined[key][s.name || "Series"] = (combined[key][s.name || "Series"] || 0) + 1;
+        } else {
+          const value = Number(getNestedValue(item, s.dataField || "value") ?? item?.[s.dataField || "value"] ?? 0);
+          combined[key][s.name || "Series"] = (combined[key][s.name || "Series"] || 0) + value;
+        }
       });
     });
     return Object.values(combined);
   };
 
+  const prepareMultiSeriesPieChartData = (seriesConfig: ChartSeries[], seriesDataMap: Record<string, any[]>) => {
+    if (!seriesConfig.length) return [];
+    return seriesConfig.map((s) => {
+      const sourceData = seriesDataMap[s.name || ""] ?? (s as any).fetchedData ?? s.data ?? [];
+      if (!Array.isArray(sourceData)) return { name: s.label || s.name, value: 0 };
+      const parsedFilter = parseFilterExpression(s.filter);
+      const filteredData = applyFilter(sourceData, parsedFilter);
+      return {
+        name: s.label || s.name,
+        value: filteredData.length,
+      };
+    }).filter((item) => item.value > 0);
+  };
+
   const hasSeries = normalizedSeries.length > 0;
-  const seriesChartData = hasSeries ? prepareChartDataFromSeries(normalizedSeries, seriesData) : [];
+  const seriesChartData = hasSeries && chartType === "pie-chart" && normalizedSeries.length > 1
+    ? prepareMultiSeriesPieChartData(normalizedSeries, seriesData)
+    : hasSeries ? prepareChartDataFromSeries(normalizedSeries, seriesData) : [];
   const defaultLabelField = dataBinding?.label_field || "name";
   const defaultDataField = dataBinding?.data_field || "value";
   const resolvedLabelField = hasSeries ? "name" : defaultLabelField;
-  const resolvedDataField = hasSeries
+  const resolvedDataField = hasSeries && !(chartType === "pie-chart" && normalizedSeries.length > 1)
     ? (normalizedSeries.length === 1 ? normalizedSeries[0]?.name || defaultDataField : defaultDataField)
-    : defaultDataField;
+    : "value";
   const finalChartData = hasSeries ? (seriesChartData.length > 0 ? seriesChartData : chartData) : chartData;
 
   if (loading) return <div id={id}>Loading data...</div>;

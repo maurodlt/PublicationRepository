@@ -11,6 +11,9 @@ export interface MetricCardBlockProps {
 
 const getLastValue = (data: any[], dataField?: string): number => {
   if (!data || data.length === 0) return 0;
+  if (dataField === "id") {
+    return data.length;
+  }
   const lastItem = data[data.length - 1];
   if (dataField && lastItem[dataField] !== undefined) {
     return Number(lastItem[dataField]) || 0;
@@ -19,6 +22,19 @@ const getLastValue = (data: any[], dataField?: string): number => {
   for (const field of commonFields) {
     if (lastItem[field] !== undefined) {
       return Number(lastItem[field]) || 0;
+    }
+  }
+  return 0;
+};
+
+const getObjectValue = (obj: Record<string, any>, dataField?: string): number => {
+  if (dataField && obj[dataField] !== undefined) {
+    return Number(obj[dataField]) || 0;
+  }
+  const commonFields = ["value", "count", "amount", "total", "sum"];
+  for (const field of commonFields) {
+    if (obj[field] !== undefined) {
+      return Number(obj[field]) || 0;
     }
   }
   return 0;
@@ -46,7 +62,17 @@ export const MetricCardBlock: React.FC<MetricCardBlockProps> = ({
         let data: any[] = [];
         if (Array.isArray(res.data)) {
           data = res.data;
-        } else if (res.data && typeof res.data === "object") {
+          setValue(getLastValue(data, dataBinding?.data_field));
+          return;
+        }
+
+        if (res.data && typeof res.data === "object") {
+          const directObjectValue = getObjectValue(res.data as Record<string, any>, dataBinding?.data_field);
+          if (directObjectValue !== 0 || (dataBinding?.data_field && (res.data as Record<string, any>)[dataBinding.data_field] === 0)) {
+            setValue(directObjectValue);
+            return;
+          }
+
           const commonArrayKeys = ["data", "results", "items", "records", "list"];
           let foundKey = commonArrayKeys.find((key) => Array.isArray((res.data as any)[key]));
           if (!foundKey) {
@@ -56,6 +82,7 @@ export const MetricCardBlock: React.FC<MetricCardBlockProps> = ({
             data = (res.data as any)[foundKey];
           }
         }
+
         setValue(getLastValue(data, dataBinding?.data_field));
       })
       .catch(() => {

@@ -93,6 +93,15 @@ export const BarChartComponent: React.FC<Props> = ({
       ? series[0]?.name || 'value'
       : (isNestedField(labelField) || isNestedField(dataField)) ? 'value' : dataField;
 
+  const maxValue = Math.max(0, ...chartData.flatMap(d => {
+    if (series && series.length > 0) {
+      return series.map(s => d[s.name] || 0);
+    } else {
+      return [d[actualDataField] || 0];
+    }
+  }));
+  const tickCount = Math.max(1, maxValue + 1);
+
   const containerStyle: CSSProperties = {
     width: "100%",
     height: "400px",
@@ -104,8 +113,28 @@ export const BarChartComponent: React.FC<Props> = ({
   const showGrid = options?.showGrid ?? true;
   const showLegend = options?.showLegend ?? true;
   const showTooltip = options?.showTooltip ?? true;
-  const legendPosition = options?.legendPosition || "top";
+  const showXAxisLabels = options?.showXAxisLabels ?? true;
+  const xAxisLabelAngle = options?.xAxisLabelAngle ?? -45;
+  const xAxisTick = options?.xAxisTick ?? (showXAxisLabels ? { angle: xAxisLabelAngle, textAnchor: xAxisLabelAngle < 0 ? "end" : "middle", fontSize: 12 } : false);
   const resolvedColor = resolveColor(color, options, styles);
+
+  const renderBarLabel = useCallback((props: any) => {
+    const { x, y, width, payload } = props;
+    const labelText = payload?.name ?? "";
+    if (!labelText) return null;
+    return (
+      <text
+        x={x + width / 2}
+        y={y + 16}
+        fill={options?.barLabelColor ?? "#fff"}
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight={600}
+      >
+        {labelText}
+      </text>
+    );
+  }, [options?.barLabelColor]);
 
   const handleLegendClick = useCallback((dataKey: string) => {
     setHiddenSeries((prev) => {
@@ -162,10 +191,17 @@ export const BarChartComponent: React.FC<Props> = ({
           <XAxis
             type={orientation === "horizontal" ? "number" : "category"}
             dataKey={orientation === "horizontal" ? actualDataField : actualLabelField}
+            tick={xAxisTick}
+            axisLine={showXAxisLabels}
+            tickLine={showXAxisLabels}
+            interval={showXAxisLabels ? 0 : "preserveStart"}
+            height={options?.xAxisHeight ?? 80}
           />
           <YAxis
             type={orientation === "horizontal" ? "category" : "number"}
             dataKey={orientation === "horizontal" ? actualLabelField : undefined}
+            domain={orientation === "horizontal" ? undefined : [0, maxValue]}
+            tickCount={orientation === "horizontal" ? undefined : tickCount}
           />
           {showTooltip && <Tooltip />}
           {showLegend && <Legend verticalAlign={legendPosition} content={renderLegend} />}
@@ -179,6 +215,7 @@ export const BarChartComponent: React.FC<Props> = ({
                 stackId={options?.stacked ? "stack" : undefined}
                 isAnimationActive={options?.animate ?? true}
                 hide={hiddenSeries.has(s.name || "")}
+                label={!showXAxisLabels ? renderBarLabel : undefined}
               />
             ))
           ) : (
@@ -188,6 +225,7 @@ export const BarChartComponent: React.FC<Props> = ({
               stackId={options?.stacked ? "stack" : undefined}
               isAnimationActive={options?.animate ?? true}
               hide={hiddenSeries.has(actualDataField)}
+              label={!showXAxisLabels ? renderBarLabel : undefined}
             />
           )}
         </BarChart>

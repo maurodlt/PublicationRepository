@@ -161,6 +161,9 @@ export const LineChartComponent: React.FC<Props> = ({
     return propData || [];
   }, [propData, series, labelField, dataField]);
 
+  const maxValue = Math.max(0, ...mergedData.flatMap(d => series.map(s => d[s.name] || 0)));
+  const tickCount = Math.max(1, maxValue + 1);
+
   const containerStyle: CSSProperties = {
     width: "100%",
     height: "400px",
@@ -226,7 +229,7 @@ export const LineChartComponent: React.FC<Props> = ({
         <LineChart data={mergedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           {showGrid && <CartesianGrid strokeDasharray="3 3" stroke={options?.gridColor} />}
           <XAxis dataKey="name" />
-          <YAxis />
+          <YAxis domain={[0, maxValue]} tickCount={tickCount} />
           {showTooltip && <Tooltip />}
           {showLegend && <Legend verticalAlign={legendPosition} content={renderLegend} />}
           {series.map((s, index) => (

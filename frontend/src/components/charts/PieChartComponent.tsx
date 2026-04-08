@@ -54,20 +54,9 @@ export const PieChartComponent: React.FC<Props> = ({
   options,
   styles,
 }) => {
-  const seriesForPie = series && series.length > 0 ? series[0] : undefined;
-  const effectiveLabelField = seriesForPie ? "name" : labelField;
-  const effectiveDataField = seriesForPie ? seriesForPie.name || dataField : dataField;
-
   // Transform data if using nested fields (dot notation)
   const isNestedField = (field: string) => field?.includes('.') || false;
   const chartData = React.useMemo(() => {
-    if (seriesForPie) {
-      return data.map((item: any) => ({
-        name: item?.[effectiveLabelField] ?? item?.name ?? item?.label,
-        value: item?.[effectiveDataField] ?? item?.value,
-      }));
-    }
-
     if (!isNestedField(labelField) && !isNestedField(dataField)) {
       return data; // No transformation needed
     }
@@ -75,44 +64,24 @@ export const PieChartComponent: React.FC<Props> = ({
       name: isNestedField(labelField) ? getNestedValue(item, labelField) : item[labelField],
       value: isNestedField(dataField) ? getNestedValue(item, dataField) : item[dataField],
     }));
-  }, [data, labelField, dataField, seriesForPie, effectiveDataField, effectiveLabelField]);
+  }, [data, labelField, dataField]);
 
-  // Use transformed field names if we did transformation
-  const actualLabelField =
-    seriesForPie
-      ? "name"
-      : (isNestedField(labelField) || isNestedField(dataField)) ? 'name' : labelField;
-  const actualDataField =
-    seriesForPie
-      ? seriesForPie.name || 'value'
-      : (isNestedField(labelField) || isNestedField(dataField)) ? 'value' : dataField;
-
-  // Extract color from styles if available
+  // Determine which color palette to use
   const styleColorPalette = styles && (styles as any)['--chart-color-palette'];
   const styleBarColor = styles && (styles as any)['--chart-bar-color'];
   
-  // Determine which color palette to use
   let pieColors: string[];
-  if (seriesForPie?.color) {
-    pieColors = [seriesForPie.color];
+  if (series && series.length > 0) {
+    pieColors = series.map((s) => s.color || defaultPalette[0]);
   } else if (color && color !== 'default') {
-    pieColors = [color]; // Use specified color
+    pieColors = [color];
   } else if (styleColorPalette === 'default') {
-    pieColors = defaultPalette; // Use default palette
+    pieColors = defaultPalette;
   } else if (styleBarColor && styleBarColor !== '#CCCCCC') {
-    pieColors = [styleBarColor]; // Use style-defined color
+    pieColors = [styleBarColor];
   } else {
-    pieColors = defaultPalette; // Fallback to default palette
+    pieColors = defaultPalette;
   }
-  
-  console.log('Color selection:', {
-    inputColor: color,
-    styleColorPalette,
-    styleBarColor,
-    usingColors: pieColors
-  });
-
-  console.log('Final colors to use:', pieColors);
 
   const showLegend = options?.showLegend ?? true;
   const showTooltip = options?.showTooltip ?? true;
@@ -120,10 +89,10 @@ export const PieChartComponent: React.FC<Props> = ({
 
   const containerStyle: CSSProperties = {
     width: "100%",
-    height: "400px", // Set a fixed height
+    height: "400px",
     marginBottom: "20px",
     ...styles,
-    minHeight: styles?.minHeight || "400px", // Ensure minHeight is respected if provided
+    minHeight: styles?.minHeight || "400px",
   };
 
   // Early return if no data or empty data array
@@ -143,8 +112,8 @@ export const PieChartComponent: React.FC<Props> = ({
         <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <Pie
             data={chartData}
-            dataKey={actualDataField}
-            nameKey={actualLabelField}
+            dataKey="value"
+            nameKey="name"
             innerRadius={options?.innerRadius}
             outerRadius={options?.outerRadius || "70%"}
             paddingAngle={options?.paddingAngle || 2}
@@ -153,16 +122,12 @@ export const PieChartComponent: React.FC<Props> = ({
             label={showLabels}
             labelLine={showLabels}
           >
-            {chartData.map((entry, index) => {
-              const fillColor = pieColors[index % pieColors.length];
-              console.log(`Slice ${index} color:`, fillColor);
-              return (
-                <Cell
-                  key={`${id}-slice-${index}`}
-                  fill={fillColor}
-                />
-              );
-            })}
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`${id}-slice-${index}`}
+                fill={pieColors[index % pieColors.length]}
+              />
+            ))}
           </Pie>
           {showTooltip && <Tooltip />}
           {showLegend && <Legend />}

@@ -1,5 +1,6 @@
 import React from "react";
 import { TableBlock } from "../components/runtime/TableBlock";
+import { ChartBlock } from "../components/runtime/ChartBlock";
 
 const Institution: React.FC = () => {
   return (
@@ -18,6 +19,38 @@ const Institution: React.FC = () => {
         <h1 id="ivhej9" style={{"marginTop": "0", "color": "#333", "fontSize": "32px", "marginBottom": "10px", "--chart-color-palette": "default"}}>{"Institution"}</h1>
         <p id="iiix2i" style={{"color": "#666", "marginBottom": "30px", "--chart-color-palette": "default"}}>{"Manage Institution data"}</p>
         <TableBlock id="table-institution-7" styles={{"width": "100%", "minHeight": "400px", "--chart-color-palette": "default"}} title="Institution List" options={{"showHeader": true, "stripedRows": false, "showPagination": true, "rowsPerPage": 5, "actionButtons": true, "columns": [{"label": "Country", "column_type": "field", "field": "country", "type": "str", "required": true}, {"label": "City", "column_type": "field", "field": "city", "type": "str", "required": true}, {"label": "Name", "column_type": "field", "field": "name", "type": "str", "required": true}], "formColumns": [{"column_type": "field", "field": "country", "label": "country", "type": "str", "required": true, "defaultValue": null}, {"column_type": "field", "field": "city", "label": "city", "type": "str", "required": true, "defaultValue": null}, {"column_type": "field", "field": "name", "label": "name", "type": "str", "required": true, "defaultValue": null}, {"column_type": "lookup", "path": "author", "field": "author", "lookup_field": "last_name", "entity": "Author", "type": "list", "required": false}, {"column_type": "lookup", "path": "publication", "field": "publication", "lookup_field": "year", "entity": "Publication", "type": "list", "required": false}]}} dataBinding={{"entity": "Institution", "endpoint": "/institution/"}} />
+        <div style={{"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "24px", "marginTop": "40px"}}>
+          <ChartBlock
+            id="chart-institution-author-count"
+            chartType="bar-chart"
+            title="Authors by Institution"
+            color="#4A90E2"
+            chart={{"showGrid": true, "showLegend": false, "showTooltip": true, "animate": true, "showXAxisLabels": true, "xAxisLabelAngle": -45, "xAxisHeight": 100}}
+            series={[{
+              "name": "author_count",
+              "label": "Authors",
+              "endpoint": "/institution-author-counts/",
+              "labelField": "name",
+              "dataField": "author_count"
+            }]}
+            styles={{"width": "100%", "minHeight": "420px", "--chart-color-palette": "default"}}
+          />
+          <ChartBlock
+            id="chart-institution-publication-count"
+            chartType="bar-chart"
+            title="Publications by Institution"
+            color="#10B981"
+            chart={{"showGrid": true, "showLegend": false, "showTooltip": true, "animate": true, "showXAxisLabels": true, "xAxisLabelAngle": -45, "xAxisHeight": 100}}
+            series={[{
+              "name": "publication_count",
+              "label": "Publications",
+              "endpoint": "/institution-publication-counts/",
+              "labelField": "name",
+              "dataField": "publication_count"
+            }]}
+            styles={{"width": "100%", "minHeight": "420px", "--chart-color-palette": "default"}}
+          />
+        </div>
       </main>
     </div>    </div>
   );

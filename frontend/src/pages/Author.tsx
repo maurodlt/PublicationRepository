@@ -1,5 +1,6 @@
 import React from "react";
 import { TableBlock } from "../components/runtime/TableBlock";
+import { ChartBlock } from "../components/runtime/ChartBlock";
 
 const Author: React.FC = () => {
   return (
@@ -18,6 +19,40 @@ const Author: React.FC = () => {
         <h1 id="iqjsfn" style={{"marginTop": "0", "color": "#333", "fontSize": "32px", "marginBottom": "10px", "--chart-color-palette": "default"}}>{"Author"}</h1>
         <p id="i5z94t" style={{"color": "#666", "marginBottom": "30px", "--chart-color-palette": "default"}}>{"Manage Author data"}</p>
         <TableBlock id="table-author-6" styles={{"width": "100%", "minHeight": "400px", "--chart-color-palette": "default"}} title="Author List" options={{"showHeader": true, "stripedRows": false, "showPagination": true, "rowsPerPage": 5, "actionButtons": true, "columns": [{"label": "Last Name", "column_type": "field", "field": "last_name", "type": "str", "required": true}, {"label": "Name", "column_type": "field", "field": "name", "type": "str", "required": true}, {"label": "Institution", "column_type": "lookup", "path": "institution", "entity": "Institution", "field": "country", "type": "list", "required": false}], "formColumns": [{"column_type": "field", "field": "last_name", "label": "last_name", "type": "str", "required": true, "defaultValue": null}, {"column_type": "field", "field": "name", "label": "name", "type": "str", "required": true, "defaultValue": null}, {"column_type": "lookup", "path": "institution", "field": "institution", "lookup_field": "country", "entity": "Institution", "type": "list", "required": false}, {"column_type": "lookup", "path": "publication_1", "field": "publication_1", "lookup_field": "year", "entity": "Publication", "type": "list", "required": false}]}} dataBinding={{"entity": "Author", "endpoint": "/author/"}} />
+        <div style={{"marginTop": "40px"}}>
+          <ChartBlock
+            id="chart-author-publication-count"
+            chartType="bar-chart"
+            title="Publications per Author"
+            color="#4A90E2"
+            chart={{"showGrid": true, "showLegend": false, "showTooltip": true, "animate": true, "showXAxisLabels": true, "xAxisLabelAngle": -45, "xAxisHeight": 100}}
+            series={[{
+              "name": "publication_count",
+              "label": "Publications",
+              "endpoint": "/author/publication-counts/",
+              "labelField": "full_name",
+              "dataField": "publication_count"
+            }]}
+            styles={{"width": "100%", "minHeight": "420px", "--chart-color-palette": "default"}}
+          />
+        </div>
+        <div style={{"marginTop": "40px"}}>
+          <ChartBlock
+            id="chart-author-citations"
+            chartType="bar-chart"
+            title="Total Citations per Author"
+            color="#FF6B6B"
+            chart={{"showGrid": true, "showLegend": false, "showTooltip": true, "animate": true, "showXAxisLabels": true, "xAxisLabelAngle": -45, "xAxisHeight": 100}}
+            series={[{
+              "name": "total_citations",
+              "label": "Total Citations",
+              "endpoint": "/author/citations/",
+              "labelField": "full_name",
+              "dataField": "total_citations"
+            }]}
+            styles={{"width": "100%", "minHeight": "420px", "--chart-color-palette": "default"}}
+          />
+        </div>
       </main>
     </div>    </div>
   );

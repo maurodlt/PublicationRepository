@@ -80,6 +80,7 @@ export const MetricCardComponent: React.FC<Props> = ({
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
+    boxSizing: "border-box",
     ...styles,
   };
 

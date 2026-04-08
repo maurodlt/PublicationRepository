@@ -750,6 +750,59 @@ export const TableComponent: React.FC<Props> = ({
                   if (modalMode === 'add') {
                     const url = endpoint.startsWith("/") ? backendBase + endpoint : endpoint;
                     try {
+                      // Check for duplicates based on entity type
+                      const entityType = endpoint.replace(/\//g, '').toLowerCase();
+                      try {
+                        const checkResponse = await axios.get(url);
+                        const existingRecords = checkResponse.data;
+                        let isDuplicate = false;
+                        let duplicateMessage = '';
+
+                        if (entityType === 'author') {
+                          // Check for duplicate author by first_name + last_name
+                          const newFirstName = (processedValues.name || '').toLowerCase().trim();
+                          const newLastName = (processedValues.last_name || '').toLowerCase().trim();
+                          const duplicate = existingRecords.some((author: any) =>
+                            (author.name || '').toLowerCase().trim() === newFirstName &&
+                            (author.last_name || '').toLowerCase().trim() === newLastName
+                          );
+                          if (duplicate) {
+                            isDuplicate = true;
+                            duplicateMessage = `An author with the name "${processedValues.name} ${processedValues.last_name}" already exists.`;
+                          }
+                        } else if (entityType === 'institution') {
+                          // Check for duplicate institution by name
+                          const newName = (processedValues.name || '').toLowerCase().trim();
+                          const duplicate = existingRecords.some((institution: any) =>
+                            (institution.name || '').toLowerCase().trim() === newName
+                          );
+                          if (duplicate) {
+                            isDuplicate = true;
+                            duplicateMessage = `An institution with the name "${processedValues.name}" already exists.`;
+                          }
+                        } else {
+                          // For publications (journal, conference, book, thesis, proceedings, others): Check title
+                          const publicationTitle = processedValues.title;
+                          if (publicationTitle) {
+                            const duplicate = existingRecords.some((pub: any) =>
+                              pub.title && pub.title.toLowerCase() === publicationTitle.toLowerCase()
+                            );
+                            if (duplicate) {
+                              isDuplicate = true;
+                              duplicateMessage = `A ${entityType} with the title "${publicationTitle}" already exists.`;
+                            }
+                          }
+                        }
+
+                        if (isDuplicate) {
+                          setValidationError(duplicateMessage);
+                          return;
+                        }
+                      } catch (checkErr) {
+                        console.error("Error checking for duplicates:", checkErr);
+                        // Continue with submission even if duplicate check fails
+                      }
+                      
                       await axios.post(url, processedValues);
                       await fetchTableData();
                       setShowModal(false);

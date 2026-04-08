@@ -93,6 +93,15 @@ export const RadarChartComponent: React.FC<Props> = ({
       ? series[0]?.name || 'value'
       : (isNestedField(labelField) || isNestedField(dataField)) ? 'value' : dataField;
 
+  const maxValue = Math.max(0, ...chartData.flatMap(d => {
+    if (series && series.length > 0) {
+      return series.map(s => d[s.name] || 0);
+    } else {
+      return [d[actualDataField] || 0];
+    }
+  }));
+  const tickCount = Math.max(1, maxValue + 1);
+
   const containerStyle: CSSProperties = {
     width: "100%",
     height: "400px",
@@ -147,7 +156,7 @@ export const RadarChartComponent: React.FC<Props> = ({
         <RadarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           {showGrid && <PolarGrid gridType={options?.gridType || "polygon"} />}
           {PolarAngleAxis({ dataKey: actualLabelField })}
-          {showRadiusAxis && <PolarRadiusAxis />}
+          {showRadiusAxis && <PolarRadiusAxis domain={[0, maxValue]} tickCount={tickCount} />}
           {showTooltip && <Tooltip />}
           {showLegend && <Legend content={renderLegend} />}
           {(series && series.length > 0 ? series : [{ name: title || actualDataField, color }]).map(
