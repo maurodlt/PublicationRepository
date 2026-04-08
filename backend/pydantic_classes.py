@@ -15,74 +15,75 @@ class InstitutionCreate(BaseModel):
     country: str
     city: str
     name: str
-    publication: List[int]  # N:M Relationship
     author: List[int]  # N:M Relationship
+    publication: List[int]  # N:M Relationship
 
 
 class AuthorCreate(BaseModel):
     name: str
     last_name: str
-    publication_1: List[int]  # N:M Relationship
     institution: List[int]  # N:M Relationship
+    publication_1: List[int]  # N:M Relationship
 
 
 class PublicationCreate(BaseModel):
     title: str
     year: int
-    author_1: List[int]  # N:M Relationship
+    citations: Optional[int] = None
     institution_1: List[int]  # N:M Relationship
+    author_1: List[int]  # N:M Relationship
 
 
 class ConferenceCreate(PublicationCreate):
+    organization: str
+    publisher: str
+    pages: str
+    booktitle: str
+    series: str
+    editor: str
+    month: str
     address: str
     note: str
-    organization: str
-    editor: str
-    booktitle: str
-    pages: str
-    month: str
     number: str
-    publisher: str
-    series: str
-
-
-class ProceedingsCreate(PublicationCreate):
-    editor: str
-    number: str
-    pages: str
-    volume: str
-    month: str
-    series: str
-    publisher: str
-    organization: str
-    booktitle: str
-    address: str
-
-
-class BookCreate(PublicationCreate):
-    publisher: str
-    address: str
-
-
-class ThesisCreate(PublicationCreate):
-    address: str
-    type: str
-    note: str
-    month: str
-
-
-class OthersCreate(PublicationCreate):
-    server: str
-    peer_reviewed: bool
-    link: str
 
 
 class JournalCreate(PublicationCreate):
     pages: str
     journal: str
-    volume: str
     note: str
     number: str
+    volume: str
     month: str
+
+
+class ProceedingsCreate(PublicationCreate):
+    booktitle: str
+    editor: str
+    address: str
+    organization: str
+    number: str
+    volume: str
+    pages: str
+    series: str
+    publisher: str
+    month: str
+
+
+class BookCreate(PublicationCreate):
+    address: str
+    publisher: str
+
+
+class ThesisCreate(PublicationCreate):
+    address: str
+    month: str
+    note: str
+    type: str
+
+
+class OthersCreate(PublicationCreate):
+    peer_reviewed: bool
+    link: str
+    server: str
 
 
