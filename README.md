@@ -47,7 +47,7 @@ Use the left menu to navigate through the available features:
 ## 🚀 Deploy to Cloud
 
 ### One-Click Deployment with Render
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/{owner}/{repo})
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/maurodlt/PublicationRepository)
 
 **Why Render?**
 - ✅ **Free Tier** - 750 hours/month for both frontend + backend
